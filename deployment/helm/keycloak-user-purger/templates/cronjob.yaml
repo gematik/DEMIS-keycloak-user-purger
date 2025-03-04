@@ -1,0 +1,135 @@
+{{/* Check required values and define variables */}}
+{{- $dockerRepository := .Values.required.image.repository | required ".Values.required.image.repository is required." -}}
+{{- $dockerImage := .Values.required.image.name | required ".Values.required.image.name is required." -}}
+{{- $dockerTag := .Values.required.image.tag | default .Chart.AppVersion -}}
+{{- $customEnvVars := .Values.customEnvVars -}}
+{{- $keycloakPortalClientSecretName := .Values.config.secret.keycloak.portal.clientSecret.name | required ".Values.config.secret.keycloak.portal.clientSecret.name is required" -}}
+{{- $keycloakPortalAdminPasswordName := .Values.config.secret.keycloak.portal.admin.name | required ".Values.config.secret.keycloak.portal.admin.name is required" -}}
+{{- $keycloakPortalClientSecretEntry := .Values.config.secret.keycloak.portal.clientSecret.key -}}
+{{- $keycloakPortalAdminPasswordEntry := .Values.config.secret.keycloak.portal.admin.key -}}
+{{- $entrypointString := toString .Values.application.entrypoint | trimPrefix "[" | trimSuffix "]" -}}
+{{- $cmdParamsString := toString .Values.application.parameters | trimPrefix "[" | trimSuffix "]" -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "keycloak-user-purger.fullversionname" . }}
+  labels:
+    {{- include "keycloak-user-purger.labels" . | nindent 4 }}
+  {{- with .Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  schedule: {{ .Values.cronJobSchedule | required ".Values.cronJobSchedule is required." }}
+  suspend: {{ .Values.required.suspend | required ".Values.required.suspend is required." }}
+  # Replaces the currently running job run with a new job run
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            {{- include "keycloak-user-purger.labels" . | nindent 12 }}
+        spec:
+          metadata:
+            labels:
+              {{- include "keycloak-user-purger.labels" . | nindent 14 }}
+            {{- with .Values.podAnnotations }}
+            annotations:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+          restartPolicy: OnFailure
+          volumes:
+          - name: tmp-volume
+            emptyDir: {}
+          {{- if .Values.debug.enable }}
+          - name: jfr-volume
+            emptyDir: {}
+          {{- end }}          
+          - name: keycloak-portal-client-secret-volume
+            secret:
+              secretName: {{ $keycloakPortalClientSecretName }}
+              items:
+              - key: {{ $keycloakPortalClientSecretEntry }}
+                path: keycloak/portal/client/secret
+          - name: keycloak-portal-admin-password-volume
+            secret:
+              secretName: {{ $keycloakPortalAdminPasswordName }}
+              items:
+              - key: {{ $keycloakPortalAdminPasswordEntry }}
+                path: keycloak/portal/admin/password
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ include "keycloak-user-purger.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 14 }}
+          containers:
+          - name: "{{ .Chart.Name }}"
+            securityContext:
+            {{- toYaml .Values.securityContext | nindent 14 }}
+            image: "{{ $dockerRepository }}/{{ $dockerImage }}:{{ $dockerTag }}"
+            imagePullPolicy: {{ .Values.imagePullPolicy }}
+            {{- /* Configure entrypoint and parameters */ -}}
+            {{- if .Values.istio.enable }}
+            command: [ "/bin/sh" ]
+            {{- else }}
+            {{- with .Values.application.entrypoint }}
+            command:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+            {{- end }}
+            {{- if .Values.istio.enable }}
+            args: [ "-c", "until wget -q -O- --spider --tries=1 http://localhost:{{ .Values.istio.healthPort }}/healthz/ready; do echo \"Waiting for Sidecar...\"; sleep 3; done; echo \"Sidecar available. Running the command...\"; {{ print $entrypointString }} {{ print $cmdParamsString }} ; x=$?; echo \"### Return Code: $x\" ; if [ $x -eq 0 ]; then wget -q --post-data='' --tries=1 -O /dev/null http://localhost:{{ .Values.istio.quitPort }}/quitquitquit; fi; exit $x" ]
+            {{- else }}
+            {{- with .Values.application.parameters }}
+            args:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+            {{- end }}
+            volumeMounts:
+            - name: tmp-volume
+              mountPath: /tmp
+            {{- if .Values.debug.enable }}
+            - name: jfr-volume
+              mountPath: /jfrdump
+            {{- end }}
+            - name: keycloak-portal-client-secret-volume
+              readOnly: true
+              mountPath: "{{ include "keycloak-user-purger.secretMountPath" . }}/keycloakClient"
+            - name: keycloak-portal-admin-password-volume
+              readOnly: true
+              mountPath: "{{ include "keycloak-user-purger.secretMountPath" . }}/keycloak"            # Set the Environment Variables for the container
+            env:
+            - name: "TZ"
+              value: "Europe/Berlin"
+            {{- if .Values.debug.enable }}
+            - name: "JAVA_TOOL_OPTIONS"
+              value: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:9000"
+            {{- end }}
+            {{- if $customEnvVars }}
+            # Custom Defined Environment Variables
+            {{- range $_, $key := keys $customEnvVars | sortAlpha }}
+            - name: {{ $key | quote }}
+              value: {{ get $customEnvVars $key | quote }}
+            {{- end }}
+            {{- end }}
+            # Set Spring Configuration Import from Folder Structure
+            - name: "SPRING_CONFIG_IMPORT"
+              value: "optional:configtree:{{ include "keycloak-user-purger.secretMountPath" . }}/*/"
+            {{- if .Values.debug.enable }}
+            # Define Debug Port
+            ports:
+            - name: debug-port
+              containerPort: 9000
+              protocol: TCP
+            {{- end }}
+            {{- with .Values.resources }}
+            # Define Limits and Requested Resources (CPU/RAM)
+            resources:
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
