@@ -73,7 +73,7 @@ This project includes:
   json-path under The Apache Software License, Version 2.0
   JSONassert under The Apache Software License, Version 2.0
   JSpecify annotations under The Apache License, Version 2.0
-  JUL to SLF4J bridge under MIT License
+  JUL to SLF4J bridge under MIT
   JUnit Jupiter (Aggregator) under Eclipse Public License v2.0
   JUnit Jupiter API under Eclipse Public License v2.0
   JUnit Jupiter Engine under Eclipse Public License v2.0
@@ -126,7 +126,7 @@ This project includes:
   RESTEasy Multipart Provider under Apache License 2.0
   RNGOM under Eclipse Distribution License - v 1.0
   service-base under Licensed under the EUPL 1.2
-  SLF4J API Module under MIT License
+  SLF4J API Module under MIT
   SnakeYAML under Apache License, Version 2.0
   SonarQube Java :: JaCoCo Listeners under GNU LGPL 3
   Spring AOP under Apache License, Version 2.0
@@ -156,7 +156,7 @@ This project includes:
   springdoc-openapi-starter-common under The Apache License, Version 2.0
   springdoc-openapi-starter-webmvc-api under The Apache License, Version 2.0
   springdoc-openapi-starter-webmvc-ui under The Apache License, Version 2.0
-  Swagger UI under Apache 2.0
+  Swagger UI under Apache-2.0
   swagger-annotations-jakarta under Apache License 2.0
   swagger-core-jakarta under Apache License 2.0
   swagger-models-jakarta under Apache License 2.0

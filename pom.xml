@@ -4,11 +4,11 @@
   <parent>
     <groupId>de.gematik.demis</groupId>
     <artifactId>spring-parent</artifactId>
-    <version>2.5.2</version>
+    <version>2.9.0</version>
     <relativePath></relativePath>
   </parent>
   <artifactId>keycloak-user-purger</artifactId>
-  <version>1.0.3-SNAPSHOT</version>
+  <version>1.1.1-SNAPSHOT</version>
   <name>keycloak-user-purger</name>
   <packaging>jar</packaging>
   <description>Service for deleting inactive users</description>
@@ -26,20 +26,38 @@
     <sonar.language>java</sonar.language>
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
     <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-    <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-
-    <!-- Dependency Versions -->
-    <keycloak-admin-client.version>26.0.4</keycloak-admin-client.version>
-    <lombok.version>1.18.36</lombok.version>
-    <slf4j-api.version>2.0.16</slf4j-api.version>
-    <junit-jupiter.version>5.12.0-M1</junit-jupiter.version>
+    <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths><!-- Dependency Versions -->
+    <keycloak-admin-client.version>26.0.5</keycloak-admin-client.version>
+    <lombok.version>1.18.38</lombok.version>
+    <slf4j-api.version>2.0.17</slf4j-api.version>
+    <junit-jupiter.version>5.12.2</junit-jupiter.version>
     <junit-pioneer.version>2.3.0</junit-pioneer.version>
     <sonar-jacoco-listeners.version>5.14.0.18788</sonar-jacoco-listeners.version>
     <assertj-core.version>3.27.3</assertj-core.version>
-    <mockito-core.version>5.15.2</mockito-core.version>
-    <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
-    <sonar-maven-plugin.version>5.0.0.4389</sonar-maven-plugin.version>
-  </properties>
+    <mockito-core.version>5.17.0</mockito-core.version>
+    <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
+    <sonar-maven-plugin.version>5.1.0.4751</sonar-maven-plugin.version>
+    <resteasy-client.version>6.2.12.Final</resteasy-client.version>
+  </properties><!-- Fix Enforcers issues -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-client</artifactId>
+        <version>${resteasy-client.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-core</artifactId>
+        <version>${resteasy-client.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-core-spi</artifactId>
+        <version>${resteasy-client.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <dependencies>
     <dependency>
       <groupId>de.gematik.demis</groupId>
@@ -105,8 +123,8 @@
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
           <argLine>@{argLine}
-                        --add-opens java.base/java.util=ALL-UNNAMED
-                        --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+            --add-opens java.base/java.util=ALL-UNNAMED
+            --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
         </configuration>
       </plugin>
     </plugins>
