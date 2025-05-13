@@ -45,7 +45,7 @@ customLabels: {}
 # Extra Environment Variables to be defined
 customEnvVars:
   # Keycloak Specific
-  KEYCLOAK_URL: "http://keycloak:8080/"
+  KEYCLOAK_URL: "http://keycloak.demis.svc.cluster.local/"
   KEYCLOAK_PORTAL_CLIENT_ID: "admin-cli"
   KEYCLOAK_PORTAL_ADMIN_USERNAME: "admin"
   PURGE_AFTER_HOURS: "48"
@@ -118,11 +118,10 @@ securityContext:
 # Default Resources
 resources:
   limits:
-    cpu: "300m"
-    memory: "1Gi"
+    memory: "250Mi"
   requests:
-    cpu: "100m"
-    memory: "512Mi"
+    cpu: "200m"
+    memory: "250Mi"
 
 nodeSelector: {}
 
