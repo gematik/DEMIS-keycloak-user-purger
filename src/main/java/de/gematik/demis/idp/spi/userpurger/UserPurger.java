@@ -26,6 +26,8 @@ package de.gematik.demis.idp.spi.userpurger;
  * #L%
  */
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +51,7 @@ public class UserPurger {
   protected static final String USER_ATTRIBUTE_LAST_LOGIN_DATE = "lastLoginDate";
   private static final String VALUE_ACCOUNT_IS_TEMPORARY = "true";
   private static final int MILLISECONDS_IN_HOUR = 3600000;
-  private static final int BUFFER_SIZE = 100;
+  private static final int PAGE_SIZE = 100;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UserPurger.class);
 
@@ -69,12 +71,28 @@ public class UserPurger {
   public void purgeUsers() {
     RealmResource realmResource = keycloakClient.getKeycloak().realm(PORTAL_REALM_NAME);
     UsersResource users = realmResource.users();
-    int numberOfUsers = users.count() + BUFFER_SIZE;
-    List<UserRepresentation> allUsers = users.list(0, numberOfUsers);
+    List<UserRepresentation> allUsers = determineAllUsers(users);
     LOGGER.info("Found {} users to process.", allUsers.size());
+
     for (UserRepresentation user : allUsers) {
       determineUsersToPurge(users, user);
     }
+  }
+
+  private List<UserRepresentation> determineAllUsers(UsersResource users) {
+    int numberOfRetrievedUsers = 0;
+    Map<String, UserRepresentation> allUsers = new HashMap<>();
+    while (true) {
+      List<UserRepresentation> pageUsers = users.list(numberOfRetrievedUsers, PAGE_SIZE);
+      if (pageUsers == null || pageUsers.isEmpty()) {
+        break;
+      }
+      for (UserRepresentation user : pageUsers) {
+        allUsers.put(user.getId(), user);
+        numberOfRetrievedUsers++;
+      }
+    }
+    return new ArrayList<>(allUsers.values());
   }
 
   private void determineUsersToPurge(UsersResource users, UserRepresentation user) {

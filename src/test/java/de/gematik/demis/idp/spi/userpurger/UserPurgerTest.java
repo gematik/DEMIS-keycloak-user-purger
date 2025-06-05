@@ -60,6 +60,23 @@ class UserPurgerTest {
     assertThat(capturedDistinctUserIds).hasSize(105);
   }
 
+  @Test
+  void shouldDelete205UsersNewUsersRegisterDuringRun() {
+    UsersResource usersResource =
+        testUsersUtil.prepare205TestUsersSimulateNewUsersAreAddedDuringRun();
+    KeycloakClient keycloakClient = prepareMockObjects(usersResource);
+
+    UserPurger userPurger = new UserPurger(keycloakClient);
+    userPurger.purgeUsers();
+
+    ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(usersResource, times(205)).delete(argumentCaptor.capture());
+    List<String> capturedUserIds = argumentCaptor.getAllValues();
+    assertThat(capturedUserIds).isNotNull();
+    Set<String> capturedDistinctUserIds = new HashSet<>(capturedUserIds);
+    assertThat(capturedDistinctUserIds).hasSize(205);
+  }
+
   private KeycloakClient prepareMockObjects(UsersResource usersResource) {
     KeycloakClient keycloakClient = Mockito.mock(KeycloakClient.class);
     RealmResource realmResource = prepareRealmResource(keycloakClient);

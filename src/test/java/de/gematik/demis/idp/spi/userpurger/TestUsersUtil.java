@@ -36,6 +36,8 @@ import org.keycloak.representations.idm.UserRepresentation;
 /** Generates test users for different use cases. */
 public class TestUsersUtil {
 
+  private static final int PAGE_SIZE = 100;
+
   /**
    * Generates 105 test users that should be deleted.
    *
@@ -43,9 +45,22 @@ public class TestUsersUtil {
    */
   public UsersResource prepare105Testusers() {
     UsersResource usersResource = mock(UsersResource.class);
-    when(usersResource.count()).thenReturn(105);
-    List<UserRepresentation> allUsers = generateTestUsers(105, TestScenarios.HAPPY_PATH);
-    when(usersResource.list(0, 205)).thenReturn(allUsers);
+    List<UserRepresentation> testUsers = generateTestUsers(105, TestScenarios.HAPPY_PATH);
+    when(usersResource.list(0, PAGE_SIZE)).thenReturn(testUsers.subList(0, PAGE_SIZE));
+    when(usersResource.list(100, PAGE_SIZE)).thenReturn(testUsers.subList(100, 105));
+    List<UserRepresentation> noUsers = generateTestUsers(0, TestScenarios.HAPPY_PATH);
+    when(usersResource.list(105, PAGE_SIZE)).thenReturn(noUsers);
+    return usersResource;
+  }
+
+  public UsersResource prepare205TestUsersSimulateNewUsersAreAddedDuringRun() {
+    UsersResource usersResource = mock(UsersResource.class);
+    List<UserRepresentation> testUsers = generateTestUsers(205, TestScenarios.HAPPY_PATH);
+    when(usersResource.list(0, PAGE_SIZE)).thenReturn(testUsers.subList(0, PAGE_SIZE));
+    when(usersResource.list(100, PAGE_SIZE)).thenReturn(testUsers.subList(97, 197));
+    when(usersResource.list(200, PAGE_SIZE)).thenReturn(testUsers.subList(197, 205));
+    List<UserRepresentation> noUsers = generateTestUsers(0, TestScenarios.HAPPY_PATH);
+    when(usersResource.list(205, PAGE_SIZE)).thenReturn(noUsers);
     return usersResource;
   }
 
@@ -74,9 +89,8 @@ public class TestUsersUtil {
 
   private UsersResource prepareForTest(TestScenarios testScenarios) {
     UsersResource usersResource = mock(UsersResource.class);
-    when(usersResource.count()).thenReturn(5);
     List<UserRepresentation> users = generateTestUsers(5, testScenarios);
-    when(usersResource.list(0, 105)).thenReturn(users);
+    when(usersResource.list(0, PAGE_SIZE)).thenReturn(users);
     return usersResource;
   }
 
