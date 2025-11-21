@@ -2,6 +2,9 @@
  
 # Release notes
 
+## Release 1.1.5
+- Updated the dependencies
+
 ## Release 1.1.4
 - Update dependencies and spring-parent to 2.12.12
 - Fix dockerhub publish pipeline
