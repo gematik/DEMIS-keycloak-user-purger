@@ -2,6 +2,9 @@
  
 # Release notes
 
+## Release 1.1.6
+- fixed job annotations in helmchart
+
 ## Release 1.1.5
 - Updated the dependencies
 
