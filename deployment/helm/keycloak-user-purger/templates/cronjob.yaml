@@ -128,5 +128,5 @@ spec:
             {{- with .Values.resources }}
             # Define Limits and Requested Resources (CPU/RAM)
             resources:
-              {{- toYaml . | nindent 12 }}
+              {{- toYaml . | nindent 14 }}
             {{- end }}

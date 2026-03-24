@@ -2,6 +2,11 @@
  
 # Release notes
 
+## Release 1.2.0 
+- updated base-image and updated from java 21 to java 25
+- Removed istio helm chart
+- Fixed resource definition indent in helm chart
+
 ## Release 1.1.7
 - Updating dependencies and plugins
 
