@@ -2,6 +2,11 @@
  
 # Release notes
 
+## Release 1.2.1
+- updated keycloak to 26.0.9
+- updated to SpringBoot 4
+- web service profile removed
+
 ## Release 1.2.0 
 - updated base-image and updated from java 21 to java 25
 - Removed istio helm chart
